@@ -1,49 +1,65 @@
-name: "CodeQL"
+name: "CodeQL Analysis"
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
   schedule:
     - cron: '27 8 * * 3'
 
 jobs:
   analyze:
-    name: analyze
+    name: Analyze code
     runs-on: ubuntu-latest
-    timeout-minutes: 360
     permissions:
       security-events: write
       actions: read
       contents: read
-
     strategy:
       fail-fast: false
       matrix:
         language: [ 'go' ]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
 
-    # Uncomment the following lines to build your code manually
-    # - name: Build Application
-    #   run: |
-    #     echo "Building Application"
-    #     go build -o myapp
+      # Manually build the Go code
+      - name: Build Application
+        run: |
+          echo "Building Application"
+          go build -o myapp
 
-    # - name: Test Application
-    #   run: |
-    #     echo "Testing Application"
-    #     go test ./...
+      - name: Test Application
+        run: |
+          echo "Testing Application"
+          go test ./...
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          output: ../results
+          upload: always
+          cleanup-level: brutal
+          add-snippets: false
+          skip-queries: false
+          checkout_path: /home/runner/work/gopportunities/gopportunities
+          upload-database: true
+          wait-for-processing: true
+          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          matrix: ${{ toJson(matrix) }}
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: codeql-results
+          path: ../results
