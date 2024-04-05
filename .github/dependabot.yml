@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: "daily"
       
-  - package-ecosystem: "golang"
+  - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "daily"
